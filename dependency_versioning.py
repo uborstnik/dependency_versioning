@@ -8,10 +8,10 @@ import subprocess
 
 class Dependency(object):
     "Data on one dependency."
-    def __init__(self, name=None, requested_version=None):
+    def __init__(self, name=None, version=None):
         "Initializes a Dependency. Update specifies whether a dependency should be updated or not."
         self.name = name
-        self.requested_version = None
+        self.requested_version = version
         self.present_version = None
 
     def get_requested_version(self):
@@ -23,8 +23,8 @@ class Dependency(object):
         return self.present_version
 
 class GITDependency(Dependency):
-    def __init__(self, name=None, repository=None, branch="master", requested_version=None):
-        super(GITDependency, self).__init__(name, requested_version)
+    def __init__(self, name=None, repository=None, branch="master", version=None):
+        super(GITDependency, self).__init__(name, version)
         self.repository = repository
         self.branch = branch
 
@@ -42,10 +42,23 @@ class GITDependency(Dependency):
         self.present_version = stdout.split(" ")[0]
         return self.present_version
 
-    def update(self, branch=None, fallback=None):
+    def update(self):
         "Updates the specified branch of the specified git repository to the requested version"
+        command_cd = "cd \"{name}\" || {{ git clone {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self.repository)
+        if self.branch is not None and self.repository is not None:
+            command_update = "git pull {repo:s} {branch:s}:{branch:s}".format(repo=self.repository, branch=self.branch)
+        else:
+            command_update = None
+        if self.requested_version is not None:
+            command_checkout = "git checkout {version:s}".format(version=self.requested_version)
+        elif self.branch is not None:
+            command_checkout = "git checkout {branch:s}".format(branch=self.branch)
+        else:
+            command_checkout = "git checkout"
+        commands = tuple((c for c in (command_cd, command_update, command_checkout) if c is not None))
+        print("&&".join(commands))
         proc = subprocess.Popen(
-            "cd \"{name}\";git pull".format(name=self.name),
+            "&&".join(("set -x",) + commands),
             stdout=subprocess.PIPE, shell="True", universal_newlines=True)
         (stdout, stderr) = proc.communicate()
         proc.wait()

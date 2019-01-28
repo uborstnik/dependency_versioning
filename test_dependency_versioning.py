@@ -37,15 +37,28 @@ class TestDependencyVersioning(unittest.TestCase):
         test_vif = dv.VersionInformationFile(viffilename).get_vif()
         self.assertDictEqual(vif, test_vif)
     def test_get_git_version(self):
-        git_dep = dv.GITDependency(name="share-db")
+        git_dep = dv.GITDependency(name="user_service_manager")
         print(git_dep.get_present_version())
+    def test_git_clone(self):
+        try:
+            (stdout, stderr) = subprocess.Popen("rm -fr user_service_manager", shell=True, universal_newlines=True).communicate()
+        except:
+            pass
+        git_dep = dv.GITDependency(name="user_service_manager", repository="git@hpc-git.ethz.ch:user_service_manager", branch="master")
+        git_dep.update()
     def test_git_update(self):
-        git_dep = dv.GITDependency(name="share-db")
-        # Test a branch switch
-        git_dep.update("dev")
-        git_dep.update("master")
-        git_dep.update("dev", fallback=None)
-        git_dep.update("dev", fallback="master")
+        git_dep = dv.GITDependency(name="user_service_manager", repository="git@hpc-git.ethz.ch:user_service_manager", branch="master")
+        git_dep.update()
+        print("TEST: HEAD IS AT", git_dep.get_present_version())
+        (stdout, stderr) = subprocess.Popen("cd user_service_manager && git reset --hard HEAD^; git status", shell=True, universal_newlines=True).communicate()
+        print("TEST: HEAD IS AT", git_dep.get_present_version())
+        git_dep.update()
+        print("TEST: HEAD IS AT", git_dep.get_present_version())
+    def test_git_set_version(self):
+        git_dep = dv.GITDependency(name="user_service_manager", repository="git@hpc-git.ethz.ch:user_service_manager", branch="master", version="a7df4b7")
+        git_dep.update()
+        print("TEST: HEAD IS AT", git_dep.get_present_version())
+        
         
 if __name__ == "__main__":
     main()
