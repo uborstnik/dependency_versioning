@@ -30,8 +30,6 @@ class GITDependency(Dependency):
 
     def get_present_version(self):
         "Returns the version of HEAD."
-        if self.present_version is not None:
-            return self.present_version
         proc = subprocess.Popen(
             "cd \"{name}\";git show-ref --head HEAD".format(name=self.name),
             stdout=subprocess.PIPE, shell="True", universal_newlines=True)
@@ -45,17 +43,13 @@ class GITDependency(Dependency):
     def update(self):
         "Updates the specified branch of the specified git repository to the requested version"
         command_cd = "cd \"{name}\" || {{ git clone {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self.repository)
-        if self.branch is not None and self.repository is not None:
-            command_update = "git pull {repo:s} {branch:s}:{branch:s}".format(repo=self.repository, branch=self.branch)
-        else:
-            command_update = None
+        command_branch = "git checkout {branch:s}".format(branch=self.branch)
+        command_update = "git pull {repo:s} {branch:s}:{branch:s}".format(repo=self.repository, branch=self.branch)
         if self.requested_version is not None:
             command_checkout = "git checkout {version:s}".format(version=self.requested_version)
-        elif self.branch is not None:
-            command_checkout = "git checkout {branch:s}".format(branch=self.branch)
         else:
-            command_checkout = "git checkout"
-        commands = tuple((c for c in (command_cd, command_update, command_checkout) if c is not None))
+            command_checkout = "git checkout {branch:s}".format(branch=self.branch)
+        commands = tuple((c for c in (command_cd, command_branch, command_update, command_checkout) if c is not None))
         print("&&".join(commands))
         proc = subprocess.Popen(
             "&&".join(("set -x",) + commands),
