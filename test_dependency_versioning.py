@@ -13,7 +13,7 @@ import yaml
 
 import dependency_versioning as dv
 
-class TestDependencyVersioning(unittest.TestCase):
+class TestGITDependencyVersioning(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory()
         self.tempdir_name = self.tempdir.name
@@ -107,6 +107,24 @@ class TestDependencyVersioning(unittest.TestCase):
             version="395c738b6aa8b7074d7d2e533c95276cc0990876")
         git_dep.update()
         self.assertEqual(git_dep.get_present_version(), "395c738b6aa8b7074d7d2e533c95276cc0990876")
-        
+
+    def test_git_get_info(self):
+        git_dep = dv.GITDependency(
+            name="test_repo",
+            repository=os.path.join(self.tempdir_name, "test_repo"),
+            branch="master")
+        git_dep.update()
+        self.assertDictEqual(
+            git_dep.get_present_info(),
+            {
+                "test_repo": {
+                    "type": "git",
+                    "branch": "master",
+                    "version": "4cc3b223d2997c8bbf84bfeae420b0d1e4dad732"
+                }
+            }
+        )
+
+
 if __name__ == "__main__":
     main()

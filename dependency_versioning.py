@@ -6,6 +6,9 @@ from __future__ import division
 import yaml
 import subprocess
 
+class UnknownVersionException(Exception):
+    pass
+
 class Dependency(object):
     "Data on one dependency."
     def __init__(self, name=None, version=None):
@@ -20,13 +23,30 @@ class Dependency(object):
         
     def get_present_version(self):
         "Returns the version of of the dependency that is present."
-        return self.present_version
+        raise NotImplementedError()
+
+    def get_present_info(self):
+        "Returns the dependency's part of the VIF. It is only valid for present dependencies."
+        raise NotImplementedError()
 
 class GITDependency(Dependency):
     def __init__(self, name=None, repository=None, branch="master", version=None):
         super(GITDependency, self).__init__(name, version)
         self.repository = repository
         self.branch = branch
+
+    def get_present_info(self):
+        "Returns the dependency's part of the VIF. It is only valid for present dependencies."
+        if self.present_version is None:
+            self.get_present_version()
+        struct = {
+            self.name: {
+                "type": "git",
+                "branch": self.branch,
+                "version": self.present_version
+            }
+        }
+        return struct
 
     def get_present_version(self):
         "Returns the version of HEAD."
@@ -36,7 +56,7 @@ class GITDependency(Dependency):
         (stdout, stderr) = proc.communicate()
         proc.wait()
         if proc.returncode != 0:
-            raise Exception("Could not get version of git repository for dependency {0}".format(self.name))
+            raise UnknownVersionException("Could not get version of git repository for dependency {0}".format(self.name))
         self.present_version = stdout.split(" ")[0]
         return self.present_version
 
