@@ -13,17 +13,7 @@ import yaml
 
 import dependency_versioning as dv
 
-class TestGITDependencyVersioning(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = tempfile.TemporaryDirectory()
-        self.tempdir_name = self.tempdir.name
-        subprocess.Popen(
-            "OD=$PWD&&cd {dir:s}&&tar xzf $OD/test_repo.tgz".format(dir=self.tempdir_name),
-            shell="True", universal_newlines=True).communicate()
-
-    def tearDown(self):
-        self.tempdir.cleanup()
-
+class TestDependencyVersioning(unittest.TestCase):
     def test_read_vif(self):
         "Test reading vifs."
         vif = {
@@ -47,6 +37,18 @@ class TestGITDependencyVersioning(unittest.TestCase):
             viffile.close()
         test_vif = dv.VersionInformationFile(viffilename).get_vif()
         self.assertDictEqual(vif, test_vif)
+
+
+class TestGITDependencyVersioning(unittest.TestCase):
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir_name = self.tempdir.name
+        subprocess.Popen(
+            "OD=$PWD&&cd {dir:s}&&tar xzf $OD/test_repo.tgz".format(dir=self.tempdir_name),
+            shell="True", universal_newlines=True).communicate()
+
+    def tearDown(self):
+        self.tempdir.cleanup()
 
     def test_get_git_version(self):
         git_dep = dv.GITDependency(name="user_service_manager")
