@@ -13,22 +13,25 @@ import yaml
 
 import dependency_versioning as dv
 
+def mktempdir():
+    tempdir = tempfile.TemporaryDirectory()
+    tempdir_name = self.tempdir.name
+    subprocess.Popen(
+        "OD=$PWD&&cd {dir:s}&&tar xzf $OD/test_repo.tgz".format(dir=self.tempdir_name),
+        shell="True", universal_newlines=True).communicate()
+    return (tempdir)
+
+def rmtempdir(tempdir):
+    tempdir.cleanup()
+
 class TestDependencyVersioning(unittest.TestCase):
     def test_read_vif(self):
         "Test reading vifs."
         vif = {
-            "pyyaml": {
-                "type": "pip",
-                "version": "3.13"
-            },
-            "alpine": {
-                "type": "docker",
-                "version": "4.0"
-            },
-            "dependency_versioning": {
+            "test": {
                 "type": "git",
-                "repository": "",
-                "version": "1234123412341234123"
+                "repository": "nowhere",
+                "branch": "master",
             }
         }
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as viffile:

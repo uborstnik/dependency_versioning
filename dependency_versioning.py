@@ -11,6 +11,7 @@ class UnknownVersionException(Exception):
 
 class Dependency(dict):
     "Data on one dependency."
+
     def __init__(self, name, version_info):
         "Initializes a Dependency. Update specifies whether a dependency should be updated or not."
         super(Dependency, self).__init__()
@@ -93,13 +94,20 @@ class GITDependency(Dependency):
             raise Exception("Could not update git repository for dependency {0}".format(self.name))
         self.present_version = self.get_present_version()
 
-class VersionInformationFile(object):
+class VersionInformationFile(dict):
     "Handle vif (Version Information File) files."
+
+    dependency_types = {
+        "git": GITDependency
+    }
 
     def __init__(self, filename):
         "Reads in the version information data from the filename vif file."
+        super(VersionInformationFile, self).__init__()
         with open(filename, "r") as viffile:
             self.vif = yaml.load(viffile)
+        for (name, version_info) in self.vif.items():
+            self[name] = self.dependency_types[version_info["type"]](name, version_info)
 
     def get_vif(self):
         "Returns the parsed data from the vif file."
