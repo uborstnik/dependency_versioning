@@ -25,22 +25,35 @@ def rmtempdir(tempdir):
     tempdir.cleanup()
 
 class TestDependencyVersioning(unittest.TestCase):
-    def test_read_vif(self):
-        "Test reading vifs."
-        vif = {
-            "test": {
-                "type": "git",
-                "repository": "nowhere",
-                "branch": "master",
-            }
+    vif = {
+        "test": {
+            "type": "git",
+            "repository": "nowhere",
+            "branch": "master",
         }
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as viffile:
-            yaml.dump(vif, viffile)
-            viffilename = viffile.name
-            viffile.close()
-        test_vif = dv.VersionInformationFile(viffilename).get_vif()
-        self.assertDictEqual(vif, test_vif)
+    }
+    def test_init(self):
+        "Test internalizing vifs"
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as input_viffile:
+            yaml.dump(self.vif, input_viffile)
+            input_viffile.close()
+            test_vif = dv.VersionInformationFile(input_viffile.name)
+        self.assertDictEqual(self.vif, test_vif)
 
+    def test_write_vif(self):
+        "Test writing out a vif."
+        # Write out the test vif and read it in.
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as input_viffile:
+            yaml.dump(self.vif, input_viffile)
+            input_viffile.close()
+            input_vif = dv.VersionInformationFile(input_viffile.name)
+        # Dump it out.
+        with tempfile.NamedTemporaryFile(mode="r", delete=False) as output_viffile:
+            input_vif.dump(output_viffile.name)
+            output_viffile.close()
+            # Read in the dump.
+            output_vif = dv.VersionInformationFile(output_viffile.name)
+        self.assertDictEqual(self.vif, output_vif)
 
 class TestGITDependencyVersioning(unittest.TestCase):
     def setUp(self):

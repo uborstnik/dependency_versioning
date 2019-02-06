@@ -21,7 +21,6 @@ class Dependency(dict):
             self["version"] = version_info["version"]
         except KeyError:
             self.requested_version = None
-            self["version"] = None
         self.present_version = None
 
     def get_requested_version(self):
@@ -56,9 +55,12 @@ class GITDependency(Dependency):
         struct = {
             "type": self["type"],
             "branch": self["branch"],
-            "version": self["version"],
             "repository": self["repository"]
         }
+        try:
+            struct["version"] = self["version"]
+        except:
+            pass
         return struct
 
     def get_present_version(self):
@@ -109,6 +111,9 @@ class VersionInformationFile(dict):
         for (name, version_info) in self.vif.items():
             self[name] = self.dependency_types[version_info["type"]](name, version_info)
 
-    def get_vif(self):
-        "Returns the parsed data from the vif file."
-        return self.vif
+    def dump(self, filename):
+        "Outputs version information to the filename vif file."
+        with open(filename, "w") as viffile:
+            self.vif = yaml.dump(self, viffile)
+
+        
