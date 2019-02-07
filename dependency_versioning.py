@@ -5,6 +5,7 @@ from __future__ import division
 
 import yaml
 import subprocess
+import argparse
 
 class UnknownVersionException(Exception):
     pass
@@ -96,6 +97,19 @@ class GITDependency(Dependency):
             raise Exception("Could not update git repository for dependency {0}".format(self.name))
         self.present_version = self.get_present_version()
 
+    def get_current_branch(self):
+        "Gets the name of the current branch."
+        command = "cd \"{name}\" && git symbolic-ref --short HEAD".format(name=self.name)
+        proc = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE, shell="True", universal_newlines=True)
+        (stdout, stderr) = proc.communicate()
+        proc.wait()
+        if proc.returncode != 0:
+            raise Exception("Could not get name of current branch for {0}".format(self.name))
+        print("BRANCH:", stdout)
+        return stdout.strip()
+
 class VersionInformationFile(dict):
     "Handle vif (Version Information File) files."
 
@@ -116,4 +130,22 @@ class VersionInformationFile(dict):
         with open(filename, "w") as viffile:
             self.vif = yaml.dump(self, viffile)
 
-        
+def parse_args(test_args=None):
+    argparser = argparse.ArgumentParser()
+    argparse.add_argument(
+        "--file",
+        dest="file", type=str, required=True,
+        help="Which file to read.")
+    argparse.add_argument(
+        "--output-file",
+        dest="out_file", type=str,
+        help="Which file to write.")
+    argparser.parse_args(test_args)
+    return args
+
+def main():
+    args = parse_args()
+    current_vif = VersionInformationFile(args.file)
+
+if __name__ == "__main__":
+    main()

@@ -81,6 +81,8 @@ class TestGITDependencyVersioning(unittest.TestCase):
                 "repository": os.path.join(self.tempdir_name, "test_repo"),
                 "branch": "master"})
         git_dep.update()
+        branch = git_dep.get_current_branch()
+        self.assertEqual(branch, "master")
 
     def test_git_update(self):
         git_dep = dv.GITDependency(
