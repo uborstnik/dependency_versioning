@@ -79,17 +79,17 @@ class GITDependency(Dependency):
 
     def update(self):
         "Updates the specified branch of the specified git repository to the requested version"
-        command_cd = "cd \"{name}\" || {{ git clone {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self["repository"])
-        command_branch = "git checkout {branch:s}".format(branch=self["branch"])
-        command_update = "git pull {repo:s} {branch:s}:{branch:s}".format(repo=self["repository"], branch=self["branch"])
+        command_cd = "cd \"{name}\" || {{ git clone{quiet:s} {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self["repository"], quiet=" -q")
+        command_branch = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=" -q")
+        command_update = "git pull{quiet:s} {repo:s} {branch:s}:{branch:s}".format(repo=self["repository"], branch=self["branch"], quiet=" -q")
         if self.requested_version is not None:
-            command_checkout = "git checkout {version:s}".format(version=self.requested_version)
+            command_checkout = "git checkout{quiet:s} {version:s}".format(version=self.requested_version, quiet=" -q")
         else:
-            command_checkout = "git checkout {branch:s}".format(branch=self["branch"])
+            command_checkout = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=" -q")
         commands = tuple((c for c in (command_cd, command_branch, command_update, command_checkout) if c is not None))
         print("&&".join(commands))
         proc = subprocess.Popen(
-            "&&".join(("set -x",) + commands),
+            "&&".join(("set +x",) + commands),
             stdout=subprocess.PIPE, shell="True", universal_newlines=True)
         (stdout, stderr) = proc.communicate()
         proc.wait()
@@ -132,20 +132,25 @@ class VersionInformationFile(dict):
 
 def parse_args(test_args=None):
     argparser = argparse.ArgumentParser()
-    argparse.add_argument(
+    argparser.add_argument(
         "--file",
         dest="file", type=str, required=True,
         help="Which file to read.")
-    argparse.add_argument(
+    argparser.add_argument(
         "--output-file",
         dest="out_file", type=str,
         help="Which file to write.")
-    argparser.parse_args(test_args)
-    return args
+    return argparser.parse_args(test_args)
 
-def main():
-    args = parse_args()
+def main(test_args=None):
+    args = parse_args(test_args)
     current_vif = VersionInformationFile(args.file)
+    if args.out_file:
+        for (dep_name, dep_vi) in current_vif.items():
+            print("Updating", dep_name)
+            dep_vi.update()
+        curent_vif.dump(args.out_file)
+    return current_vif
 
 if __name__ == "__main__":
     main()

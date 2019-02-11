@@ -55,6 +55,24 @@ class TestDependencyVersioning(unittest.TestCase):
             output_vif = dv.VersionInformationFile(output_viffile.name)
         self.assertDictEqual(self.vif, output_vif)
 
+    def test_main(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir_name = self.tempdir.name
+        subprocess.Popen(
+            "OD=$PWD&&cd {dir:s}&&tar xzf $OD/test_repo.tgz".format(dir=self.tempdir_name),
+            shell="True", universal_newlines=True).communicate()
+        base_dir = os.getcwd()
+        try:
+            os.chdir(self.tempdir_name)
+            with open("master.vif", "w") as output_vif_file:
+                yaml.dump(self.vif, output_vif_file)
+            output_vif = dv.main(["--file","master.vif"])
+            self.assertDictEqual(self.vif, output_vif)
+            self.tempdir.cleanup()
+        finally:
+            os.chdir(base_dir)
+            
+
 class TestGITDependencyVersioning(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory()
