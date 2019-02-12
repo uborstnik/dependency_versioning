@@ -37,6 +37,7 @@ class Dependency(dict):
         raise NotImplementedError()
 
 class GITDependency(Dependency):
+    git_quiet=" -q"
     def __init__(self, name, version_info):
         super(GITDependency, self).__init__(name, version_info)
         self["type"] = "git"
@@ -67,7 +68,7 @@ class GITDependency(Dependency):
     def get_present_version(self):
         "Returns the version of HEAD."
         proc = subprocess.Popen(
-            "cd \"{name}\";git show-ref --head HEAD".format(name=self.name),
+            "cd \"{name}\" && git show-ref --head HEAD".format(name=self.name),
             stdout=subprocess.PIPE, shell="True", universal_newlines=True)
         (stdout, stderr) = proc.communicate()
         proc.wait()
@@ -79,15 +80,14 @@ class GITDependency(Dependency):
 
     def update(self):
         "Updates the specified branch of the specified git repository to the requested version"
-        command_cd = "cd \"{name}\" || {{ git clone{quiet:s} {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self["repository"], quiet=" -q")
-        command_branch = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=" -q")
-        command_update = "git pull{quiet:s} {repo:s} {branch:s}:{branch:s}".format(repo=self["repository"], branch=self["branch"], quiet=" -q")
+        command_cd = "cd \"{name}\" 2> /dev/null || {{ git clone{quiet:s} {repo} ; cd \"{name}\"; }}".format(name=self.name, repo=self["repository"], quiet=self.git_quiet)
+        command_branch = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=self.git_quiet)
+        command_update = "git pull{quiet:s} {repo:s} {branch:s}:{branch:s}".format(repo=self["repository"], branch=self["branch"], quiet=self.git_quiet)
         if self.requested_version is not None:
-            command_checkout = "git checkout{quiet:s} {version:s}".format(version=self.requested_version, quiet=" -q")
+            command_checkout = "git checkout{quiet:s} {version:s}".format(version=self.requested_version, quiet=self.git_quiet)
         else:
-            command_checkout = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=" -q")
+            command_checkout = "git checkout{quiet:s} {branch:s}".format(branch=self["branch"], quiet=self.git_quiet)
         commands = tuple((c for c in (command_cd, command_branch, command_update, command_checkout) if c is not None))
-        print("&&".join(commands))
         proc = subprocess.Popen(
             "&&".join(("set +x",) + commands),
             stdout=subprocess.PIPE, shell="True", universal_newlines=True)
