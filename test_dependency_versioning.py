@@ -84,10 +84,6 @@ class TestGITDependencyVersioning(unittest.TestCase):
     def tearDown(self):
         self.tempdir.cleanup()
 
-    def test_get_git_version(self):
-        git_dep = dv.GITDependency(name="user_service_manager", version_info={})
-        print(git_dep.get_present_version())
-
     def test_git_clone(self):
         try:
             (stdout, stderr) = subprocess.Popen("rm -fr test_repo", shell=True, universal_newlines=True).communicate()
