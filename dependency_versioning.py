@@ -145,11 +145,11 @@ def parse_args(test_args=None):
 def main(test_args=None):
     args = parse_args(test_args)
     current_vif = VersionInformationFile(args.file)
+    for (dep_name, dep_vi) in current_vif.items():
+        print("Updating", dep_name)
+        dep_vi.update()
     if args.out_file:
-        for (dep_name, dep_vi) in current_vif.items():
-            print("Updating", dep_name)
-            dep_vi.update()
-        curent_vif.dump(args.out_file)
+        current_vif.dump(args.out_file)
     return current_vif
 
 if __name__ == "__main__":
