@@ -130,12 +130,21 @@ class VersionInformationFile(dict):
         with open(filename, "w") as viffile:
             self.vif = yaml.dump(self, viffile)
 
+    def update(self):
+        for (dep_name, dep_vi) in self.items():
+            print("Updating", dep_name)
+            dep_vi.update()
+
 def parse_args(test_args=None):
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--file",
         dest="file", type=str, required=True,
         help="Which file to read.")
+    argparser.add_argument(
+        "--no-update",
+        dest="update", default=True, action='store_false',
+        help="Do not update dependencies.")
     argparser.add_argument(
         "--output-file",
         dest="out_file", type=str,
@@ -145,11 +154,11 @@ def parse_args(test_args=None):
 def main(test_args=None):
     args = parse_args(test_args)
     current_vif = VersionInformationFile(args.file)
-    for (dep_name, dep_vi) in current_vif.items():
-        print("Updating", dep_name)
-        dep_vi.update()
+    if args.update:
+        current_vif.update()
     if args.out_file:
-        current_vif.dump(args.out_file)
+        with open(args.out_file, "w") as new_vif_file:
+            yaml.dump(current_vif, new_vif_file)
     return current_vif
 
 if __name__ == "__main__":

@@ -66,8 +66,10 @@ class TestDependencyVersioning(unittest.TestCase):
             os.chdir(self.tempdir_name)
             with open("master.vif", "w") as output_vif_file:
                 yaml.dump(self.vif, output_vif_file)
-            output_vif = dv.main(["--file","master.vif"])
+            output_vif = dv.main(["--file","master.vif","--output-file","new.vif", "--no-update"])
             self.assertDictEqual(self.vif, output_vif)
+            written_vif = dv.VersionInformationFile("new.vif")
+            self.assertDictEqual(self.vif, written_vif)
             self.tempdir.cleanup()
         finally:
             os.chdir(base_dir)
