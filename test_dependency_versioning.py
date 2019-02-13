@@ -68,7 +68,8 @@ class TestDependencyVersioning(unittest.TestCase):
                 yaml.dump(self.vif, output_vif_file)
             output_vif = dv.main(["--file","master.vif","--output-file","new.vif", "--no-update"])
             self.assertDictEqual(self.vif, output_vif)
-            written_vif = dv.VersionInformationFile("new.vif")
+            with open("new.vif", "r") as written_vif_file:
+                written_vif = yaml.load(written_vif_file)
             self.assertDictEqual(self.vif, written_vif)
             self.tempdir.cleanup()
         finally:

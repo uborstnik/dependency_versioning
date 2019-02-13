@@ -6,6 +6,7 @@ from __future__ import division
 import yaml
 import subprocess
 import argparse
+import json
 
 class UnknownVersionException(Exception):
     pass
@@ -128,7 +129,7 @@ class VersionInformationFile(dict):
     def dump(self, filename):
         "Outputs version information to the filename vif file."
         with open(filename, "w") as viffile:
-            self.vif = yaml.dump(self, viffile)
+            self.vif = json.dump(self, viffile, indent="    ")
 
     def update(self):
         for (dep_name, dep_vi) in self.items():
@@ -157,8 +158,7 @@ def main(test_args=None):
     if args.update:
         current_vif.update()
     if args.out_file:
-        with open(args.out_file, "w") as new_vif_file:
-            yaml.dump(current_vif, new_vif_file)
+        current_vif.dump(args.out_file)
     return current_vif
 
 if __name__ == "__main__":
