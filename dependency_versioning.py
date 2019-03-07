@@ -11,6 +11,9 @@ import json
 class UnknownVersionException(Exception):
     pass
 
+class ExternalCommandException(Exception):
+    pass
+
 class Dependency(dict):
     "Data on one dependency."
 
@@ -95,7 +98,7 @@ class GITDependency(Dependency):
         (stdout, stderr) = proc.communicate()
         proc.wait()
         if proc.returncode != 0:
-            raise Exception("Could not update git repository for dependency {0}".format(self.name))
+            raise ExternalCommandException("Could not update git repository for dependency {0}:\n{1}\n{2}".format(self.name, stdout))
         self.present_version = self.get_present_version()
 
     def get_current_branch(self):
