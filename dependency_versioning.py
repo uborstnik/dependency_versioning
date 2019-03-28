@@ -134,10 +134,16 @@ class VersionInformationFile(dict):
         with open(filename, "w") as viffile:
             self.vif = json.dump(self, viffile, indent="    ")
 
-    def update(self):
+    def update(self, silent=False):
         for (dep_name, dep_vi) in self.items():
-            print("Updating", dep_name)
+            if not silent: print("Updating", dep_name)
             dep_vi.update()
+
+    def print_version(self, dependency_name):
+        try:
+            print(self[dependency_name]["version"])
+        except:
+            print("0.xyz")
 
 def parse_args(test_args=None):
     argparser = argparse.ArgumentParser()
@@ -153,13 +159,19 @@ def parse_args(test_args=None):
         "--output-file",
         dest="out_file", type=str,
         help="Which file to write.")
+    argparser.add_argument(
+        "--print-version",
+        dest="print_version", type=str,
+        help="Print just the updated version of the given dependency.")
     return argparser.parse_args(test_args)
 
 def main(test_args=None):
     args = parse_args(test_args)
     current_vif = VersionInformationFile(args.file)
     if args.update:
-        current_vif.update()
+        current_vif.update(silent=args.print_version is not None)
+    if args.print_version is not None:
+        current_vif.print_version(args.print_version)
     if args.out_file:
         current_vif.dump(args.out_file)
     return current_vif
